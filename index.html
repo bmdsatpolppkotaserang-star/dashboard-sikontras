@@ -125,7 +125,7 @@
       letter-spacing: 0.3px;
     }
 
-    /* FORMAT LIST KARTU UNTUK HP (GANTI TABEL Kaku) */
+    /* FORMAT LIST KARTU UNTUK HP */
     .abnormal-list {
       display: flex;
       flex-direction: column;
@@ -215,7 +215,7 @@
     <button class="btn-refresh" onclick="muatDataDashboard()">🔄 Refresh</button>
   </div>
 
-  <!-- KOTAK STATISTIK & REKAP (Grid Mobile 2 Kolom) -->
+  <!-- KOTAK STATISTIK & REKAP -->
   <div class="stats-grid">
     <div class="stat-card full-width" style="border-left-color: #ef4444;">
       <div>
@@ -270,6 +270,31 @@
     }
   }
 
+  // Fungsi pembantu untuk membersihkan teks tanggal mentah dari server
+  function bersihkanFormatTanggal(rawWaktu) {
+    if (!rawWaktu) return '-';
+    let strWaktu = String(rawWaktu);
+    
+    // Jika mengandung format panjang bawaan objek date Google Script, ambil bagian tanggal atau potong
+    if (strWaktu.includes("GMT") || strWaktu.includes("1899") || strWaktu.length > 20) {
+      try {
+        let d = new Date(strWaktu);
+        if (!isNaN(d.getTime())) {
+          let tgl = String(d.getDate()).padStart(2, '0');
+          let bln = String(d.getMonth() + 1).padStart(2, '0');
+          let thn = d.getFullYear();
+          if (thn > 2000) {
+            return `${thn}-${bln}-${tgl}`;
+          }
+        }
+      } catch(e) {}
+      
+      // Fallback: ambil 10 karakter pertama jika formatnya berantakan
+      return strWaktu.substring(0, 10);
+    }
+    return strWaktu;
+  }
+
   function muatDataDashboard() {
     const container = document.getElementById('containerAbnormal');
     container.innerHTML = `<div class="empty-state" style="background:white; color:var(--slate);">⏳ Memperbarui data dari server...</div>`;
@@ -290,6 +315,8 @@
           if(res.logs && res.logs.length > 0) {
             res.logs.forEach(row => {
               if (row.detailAbsensi && Array.isArray(row.detailAbsensi)) {
+                let tanggalBersih = bersihkanFormatTanggal(row.waktu);
+
                 row.detailAbsensi.forEach(ang => {
                   if (ang.status && ang.status.toLowerCase() !== "hadir") {
                     totalTemuanCount++;
@@ -311,11 +338,11 @@
                       warnaBadge = "#0284c7";
                     }
 
-                    // Tampilan Kartu Khusus Mobile
+                    // Tampilan Kartu Khusus Mobile dengan Tanggal yang Sudah Bersih
                     htmlCards += `
                       <div class="abnormal-item">
                         <div class="abnormal-header">
-                          <div>📅 <b>${row.waktu}</b> &bull; <span style="color:var(--primary); font-weight:700;">${row.jamPatroli || ''}</span></div>
+                          <div>📅 <b>${tanggalBersih}</b> &bull; <span style="color:var(--primary); font-weight:700;">${row.jamPatroli || ''}</span></div>
                           <div>🛡️ <b>${row.pleton}</b> (${row.danton})</div>
                         </div>
                         
