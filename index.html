@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DASHBOARD SIKONTRAS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #15803d;
+      --dark: #0f172a;
+      --slate: #475569;
+      --border: #e2e8f0;
+      --bg: #f1f5f9;
+    }
+    * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background: var(--bg); margin: 0; padding: 20px; color: var(--dark); }
+    .container { max-width: 1050px; margin: 0 auto; }
+    
+    .header-card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .header-card h2 { margin: 0; font-size: 20px; color: var(--primary); }
+    
+    /* STATS & REKAP GRID */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .stat-card { background: white; padding: 16px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 4px solid var(--primary); }
+    .stat-card h4 { margin: 0; font-size: 11px; color: var(--slate); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card p { margin: 8px 0 0 0; font-size: 22px; font-weight: 800; color: var(--dark); }
+    
+    .content-card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th { background: var(--dark); color: white; padding: 10px; font-size: 11px; text-align: left; text-transform: uppercase; letter-spacing: 0.5px; }
+    td { padding: 10px; border-top: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+    
+    .btn-refresh { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .btn-refresh:active { transform: scale(0.98); }
+    
+    .badge-status {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- HEADER -->
+  <div class="header-card">
+    <div>
+      <h2>DASHBOARD SIKONTRAS</h2>
+      <p style="margin:4px 0 0 0; font-size:12px; color:var(--slate);">Rekapitulasi & Monitoring Anggota</p>
+    </div>
+    <button class="btn-refresh" onclick="muatDataDashboard()">🔄 Refresh Data</button>
+  </div>
+
+  <!-- KOTAK STATISTIK & REKAP -->
+  <div class="stats-grid">
+    <div class="stat-card" style="border-left-color: #ef4444;">
+      <h4>Total</h4>
+      <p id="statTotalTemuan">0</p>
+    </div>
+    <div class="stat-card" style="border-left-color: #f59e0b;">
+      <h4>Terlambat</h4>
+      <p id="statTerlambat">0</p>
+    </div>
+    <div class="stat-card" style="border-left-color: #f97316;">
+      <h4>Luar Pos / Hilang</h4>
+      <p id="statLuarPos">0</p>
+    </div>
+    <div class="stat-card" style="border-left-color: #ef4444;">
+      <h4>Sakit</h4>
+      <p id="statSakit">0</p>
+    </div>
+    <div class="stat-card" style="border-left-color: #0284c7;">
+      <h4>Izin / Cuti / TK</h4>
+      <p id="statLainnya">0</p>
+    </div>
+  </div>
+
+  <!-- TABEL RINCIAN -->
+  <div class="content-card">
+    <h3 style="margin-top:0; font-size:15px; color:var(--dark);">Daftar Rincian Ketidakhadiran Anggota</h3>
+    <div style="overflow-x: auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Waktu & Sesi</th>
+            <th>Pleton / Danton</th>
+            <th>Pos Jaga</th>
+            <th>Nama Anggota</th>
+            <th>Status Kehadiran</th>
+            <th>Keterangan</th>
+          </tr>
+        </thead>
+        <tbody id="tabelAbnormalBody">
+          <tr><td colspan="6" style="text-align:center; padding:20px;">Memuat data rekapitulasi...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbwvXrMvpq5a7thD8htTI6Yik0FMd_ynWgP_uIVVtLMuDBlHt9mK7vSrdiYyLkjqZMBp2A/exec";
+
+  window.onload = function() {
+    muatDataDashboard();
+  };
+
+  function muatDataDashboard() {
+    fetch(URL_WEB_APP + "?action=getDataDashboard")
+      .then(res => res.json())
+      .then(res => {
+        if(res.status === "SUCCESS") {
+          const tbody = document.getElementById('tabelAbnormalBody');
+          tbody.innerHTML = "";
+          
+          let countTerlambat = 0;
+          let countLuarPos = 0;
+          let countSakit = 0;
+          let countLainnya = 0;
+          let totalTemuanCount = 0;
+          let htmlRows = "";
+          
+          if(res.logs && res.logs.length > 0) {
+            res.logs.forEach(row => {
+              if (row.detailAbsensi && Array.isArray(row.detailAbsensi)) {
+                row.detailAbsensi.forEach(ang => {
+                  // Filter: Hanya proses yang BUKAN "Hadir"
+                  if (ang.status && ang.status.toLowerCase() !== "hadir") {
+                    totalTemuanCount++;
+                    
+                    let statusLower = ang.status.toLowerCase();
+                    let warnaBadge = "#f59e0b"; // Oranye default
+                    
+                    if (statusLower.includes("terlambat")) {
+                      countTerlambat++;
+                      warnaBadge = "#f59e0b";
+                    } else if (statusLower.includes("luar pos") || statusLower.includes("meninggalkan")) {
+                      countLuarPos++;
+                      warnaBadge = "#f97316";
+                    } else if (statusLower.includes("sakit")) {
+                      countSakit++;
+                      warnaBadge = "#ef4444";
+                    } else {
+                      countLainnya++;
+                      warnaBadge = "#0284c7"; // Izin, Cuti, Tanpa Keterangan
+                    }
+
+                    htmlRows += `
+                      <tr>
+                        <td><b>${row.waktu}</b><br><span style="font-size:11px; color:var(--slate);">${row.jamPatroli || ''}</span></td>
+                        <td><b>${row.pleton}</b><br><span style="font-size:11px; color:var(--slate);">${row.danton}</span></td>
+                        <td>${row.pos}</td>
+                        <td><b>${ang.nama}</b></td>
+                        <td><span class="badge-status" style="background:${warnaBadge}15; color:${warnaBadge};">${ang.status}</span></td>
+                        <td>${ang.keterangan || '-'}</td>
+                      </tr>
+                    `;
+                  }
+                });
+              }
+            });
+          }
+          
+          // Update nilai ke kotak rekap statistik di atas
+          document.getElementById('statTotalTemuan').innerText = totalTemuanCount;
+          document.getElementById('statTerlambat').innerText = countTerlambat;
+          document.getElementById('statLuarPos').innerText = countLuarPos;
+          document.getElementById('statSakit').innerText = countSakit;
+          document.getElementById('statLainnya').innerText = countLainnya;
+          
+          if (htmlRows !== "") {
+            tbody.innerHTML = htmlRows;
+          } else {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#166534; font-weight:600; padding:25px;">🎉 Nihil! Semua anggota tercatat hadir lengkap di pos pengontrolan.</td></tr>`;
+          }
+        }
+      })
+      .catch(err => {
+        console.error("Gagal memuat data pimpinan:", err);
+        document.getElementById('tabelAbnormalBody').innerHTML = `<tr><td colspan="6" style="text-align:center; color:#ef4444; padding:20px;">Gagal terhubung ke server.</td></tr>`;
+      });
+  }
+</script>
+
+</body>
+</html>
