@@ -72,7 +72,7 @@
     }
     .btn-refresh:active { transform: scale(0.96); }
 
-    /* STATS & REKAP GRID (OPTIMASI HP) */
+    /* STATS & REKAP GRID */
     .stats-grid { 
       display: grid; 
       grid-template-columns: repeat(2, 1fr); 
@@ -125,67 +125,69 @@
       letter-spacing: 0.3px;
     }
 
-    /* FORMAT LIST KARTU UNTUK HP */
+    /* FORMAT LIST KARTU URUTAN ATAS KE BAWAH */
     .abnormal-list {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
 
     .abnormal-item {
       background: var(--bg);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 12px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
 
-    .abnormal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
+    /* Baris 1: Tanggal & Waktu */
+    .card-row-time {
+      font-size: 12px;
+      color: var(--slate);
+      font-weight: 600;
       border-bottom: 1px solid var(--border);
       padding-bottom: 6px;
-      font-size: 11px;
-      color: var(--slate);
-    }
-
-    .abnormal-body {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 8px;
     }
 
-    .member-name {
-      font-size: 14px;
+    /* Baris 2: Penempatan (Pos Jaga & Pleton) */
+    .card-row-pos {
+      font-size: 13px;
       font-weight: 700;
       color: var(--dark);
-      margin: 0;
     }
 
-    .pos-info {
-      font-size: 12px;
-      color: var(--slate);
-      font-weight: 500;
+    /* Baris 3: Nama Anggota */
+    .card-row-name {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--primary);
     }
 
+    /* Baris 4: Status Kehadiran */
+    .card-row-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
     .badge-status {
       display: inline-block;
       padding: 4px 10px;
       border-radius: 6px;
       font-size: 11px;
       font-weight: 700;
-      white-space: nowrap;
     }
 
-    .ket-text {
+    /* Baris 5: Keterangan */
+    .card-row-ket {
       font-size: 12px;
       color: var(--slate);
       background: white;
-      padding: 6px 10px;
+      padding: 8px 10px;
       border-radius: 8px;
       border: 1px dashed var(--border);
       margin-top: 2px;
@@ -270,12 +272,9 @@
     }
   }
 
-  // Fungsi pembantu untuk membersihkan teks tanggal mentah dari server
   function bersihkanFormatTanggal(rawWaktu) {
     if (!rawWaktu) return '-';
     let strWaktu = String(rawWaktu);
-    
-    // Jika mengandung format panjang bawaan objek date Google Script, ambil bagian tanggal atau potong
     if (strWaktu.includes("GMT") || strWaktu.includes("1899") || strWaktu.length > 20) {
       try {
         let d = new Date(strWaktu);
@@ -283,13 +282,9 @@
           let tgl = String(d.getDate()).padStart(2, '0');
           let bln = String(d.getMonth() + 1).padStart(2, '0');
           let thn = d.getFullYear();
-          if (thn > 2000) {
-            return `${thn}-${bln}-${tgl}`;
-          }
+          if (thn > 2000) return `${thn}-${bln}-${tgl}`;
         }
       } catch(e) {}
-      
-      // Fallback: ambil 10 karakter pertama jika formatnya berantakan
       return strWaktu.substring(0, 10);
     }
     return strWaktu;
@@ -338,25 +333,33 @@
                       warnaBadge = "#0284c7";
                     }
 
-                    // Tampilan Kartu Khusus Mobile dengan Tanggal yang Sudah Bersih
+                    // TAMPILAN URUT DARI ATAS KE BAWAH:
+                    // 1. Tanggal Waktu
+                    // 2. Penempatan
+                    // 3. Nama Anggota
+                    // 4. Status Kehadiran
+                    // 5. Keterangan
                     htmlCards += `
                       <div class="abnormal-item">
-                        <div class="abnormal-header">
-                          <div>📅 <b>${tanggalBersih}</b> &bull; <span style="color:var(--primary); font-weight:700;">${row.jamPatroli || ''}</span></div>
-                          <div>🛡️ <b>${row.pleton}</b> (${row.danton})</div>
+                        <div class="card-row-time">
+                          <span>📅 <b>${tanggalBersih}</b></span>
+                          <span style="color:var(--primary); font-weight:700;">⏰ ${row.jamPatroli || '-'}</span>
                         </div>
                         
-                        <div class="abnormal-body">
-                          <div>
-                            <div class="pos-info">📍 ${row.pos}</div>
-                            <h4 class="member-name">${ang.nama}</h4>
-                          </div>
-                          <div>
-                            <span class="badge-status" style="background:${warnaBadge}15; color:${warnaBadge};">${ang.status}</span>
-                          </div>
+                        <div class="card-row-pos">
+                          📍 ${row.pos} <span style="font-size:11px; color:var(--slate); font-weight:normal;">(${row.pleton} - ${row.danton})</span>
                         </div>
                         
-                        ${ang.keterangan ? `<div class="ket-text">💬 <i>${ang.keterangan}</i></div>` : ''}
+                        <div class="card-row-name">
+                          👤 ${ang.nama}
+                        </div>
+                        
+                        <div class="card-row-status">
+                          <span style="font-size:11px; color:var(--slate); font-weight:700;">STATUS:</span>
+                          <span class="badge-status" style="background:${warnaBadge}15; color:${warnaBadge};">${ang.status}</span>
+                        </div>
+                        
+                        ${ang.keterangan ? `<div class="card-row-ket">💬 <b>Ket:</b> <i>${ang.keterangan}</i></div>` : ''}
                       </div>
                     `;
                   }
