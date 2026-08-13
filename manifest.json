@@ -1,6 +1,6 @@
 {
-  "name": "SIKONTRAS - Satpol PP Kota Serang",
-  "short_name": "SIKONTRAS",
+  "name": "DASHBOARD SIKONTRAS",
+  "short_name": "DASHBOARD SIKONTRAS",
   "description": "Sistem Kontrol Patroli Satuan Polisi Pamong Praja Kota Serang",
   "start_url": "./index.html",
   "display": "standalone",
