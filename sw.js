@@ -1,11 +1,11 @@
-const CACHE_NAME = 'sikontras-v1';
+const CACHE_NAME = 'sikontras-v2';
 const urlsToCache = [
   './index.html',
   './manifest.json',
   './polpp.png',
   './kotaserang.png',
-  '.icon-192.png',
-  '.icon-512.png'
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 // Event Install: Menyimpan aset ke dalam cache
