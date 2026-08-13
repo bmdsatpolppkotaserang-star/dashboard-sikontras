@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#15803d">  
   <title>DASHBOARD SIKONTRAS</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -107,8 +109,17 @@
   const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbwvXrMvpq5a7thD8htTI6Yik0FMd_ynWgP_uIVVtLMuDBlHt9mK7vSrdiYyLkjqZMBp2A/exec";
 
   window.onload = function() {
-    muatDataDashboard();
-  };
+  cekSessionLogin();
+  daftarServiceWorker(); // Pastikan baris ini terpanggil
+};
+
+function daftarServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('Service Worker Berhasil Terdaftar:', reg))
+      .catch(err => console.error('Service Worker Gagal:', err));
+  }
+}
 
   function muatDataDashboard() {
     fetch(URL_WEB_APP + "?action=getDataDashboard")
